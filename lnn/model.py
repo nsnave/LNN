@@ -16,7 +16,8 @@ from tqdm import tqdm
 from . import _utils, _exceptions
 from .symbolic.axioms import lifted_axioms
 from .constants import Fact, World, Direction
-from .symbolic.logic import Proposition, Predicate, _Formula
+from .symbolic.logic import (Proposition, Predicate, Variable, _Formula,
+                            ForAll, Exists, Not, And, Or, Implies, Bidirectional)
 
 
 class Model:
@@ -94,10 +95,14 @@ class Model:
 
     """
 
-    def __init__(self, name: str = "Model"):
+    def __init__(self, name: str = "Model", theories : list = None):
         self.graph = nx.DiGraph()
         self.nodes = dict()
         self.name = name
+        self.theories = theories
+
+        self._init_theories(theories)
+
 
     def __getitem__(self, key: str):
         r"""model['node_name']"""
@@ -125,6 +130,52 @@ class Model:
 
     def __contains__(self, key: str):
         return key in self.nodes
+
+    def _init_theories(self, theories: list):
+        r"""Extend the model to add support for first-order theories
+        by adding any needed "static" axioms, i.e., axioms which do
+        not depend on predicates added later.
+        
+        Currently, only the theory of equality is supported.
+        To add the theory, have theories = ['equality']. This will then
+        add the 2-ary "Equals" predicate to the model.
+
+        """
+        if 'equality' in theories:
+            x = Variable('x')
+            y = Variable('y')
+            z = Variable('z')
+            
+            # Predicate for the theory of equality
+            Equals = Predicate(name='Equals', arity=2)
+
+            # Static axioms for equality
+            reflexivity = ForAll(x, Equals(x, x), 
+                                world=World.AXIOM)
+
+            symmetry = ForAll(x, y, Implies(Equals(x, y), Equals(y, x)),
+                            world=World.AXIOM)
+
+            transitivity = ForAll(x, y, z, Implies(And(Equals(x, y), Equals(y, z)), Equals(x, z)),
+                                world=World.AXIOM)
+
+            self.add_formulae(reflexivity, symmetry, transitivity)
+
+    def _update_theories(self, *names: str):
+        if 'equality' in self.theories:
+            Equals = self['Equals']
+            for name in names:
+                P = self[name]
+                arity = P.arity
+
+                vars1 = [Variable("a{}".format(x)) for x in range(0, arity)]
+                vars2 = [Variable("b{}".format(x)) for x in range(0, arity)]
+
+                conjunction = And(*[Equals(v1, v2) for v1, v2 in zip(vars1, vars2)])
+                
+                equivalence = ForAll(*(vars1 + vars2), Implies(conjunction, Bidirectional(P(*vars1), P(*vars2))),
+                                    world=World.AXIOM)
+                self.add_formulae(equivalence)
 
     def add_formulae(self, *formulae: _Formula, world: World = World.OPEN):
         r"""Extend the model to include additional formulae
@@ -172,6 +223,7 @@ class Model:
         for name in names:
             self[name] = Predicate(arity=arity, **kwds)
             ret.append(self[name])
+        self._update_theories(*names)
         return ret[0] if len(ret) == 1 else ret
 
     def _add_rules(self, *formulae: _Formula, world: World = World.OPEN):
