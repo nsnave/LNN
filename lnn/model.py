@@ -147,7 +147,8 @@ class Model:
             z = Variable('z')
             
             # Predicate for the theory of equality
-            Equals = Predicate(name='Equals', arity=2)
+            self['Equals'] = Predicate(arity=2)
+            Equals = self['Equals']
 
             # Static axioms for equality
             reflexivity = ForAll(x, Equals(x, x), 
@@ -172,7 +173,7 @@ class Model:
                 vars2 = [Variable("b{}".format(x)) for x in range(0, arity)]
 
                 conjunction = And(*[Equals(v1, v2) for v1, v2 in zip(vars1, vars2)])
-                
+
                 equivalence = ForAll(*(vars1 + vars2), Implies(conjunction, Bidirectional(P(*vars1), P(*vars2))),
                                     world=World.AXIOM)
                 self.add_formulae(equivalence)
