@@ -118,6 +118,9 @@ class Model:
         model['P1'] = Predicate()
         ```
         """
+        if isinstance(formula, Predicate):
+            self._update_theories(formula)
+
         self.add_formulae(formula)
         _utils.dict_rekey(self.nodes, formula.name, name)
         self.nodes[name].rename(name)
@@ -159,20 +162,18 @@ class Model:
 
             self.add_formulae(reflexivity, symmetry, transitivity)
 
-    def _update_theories(self, *names: str):
+    def _update_theories(self, pred: Predicate):
         if 'equality' in self.theories:
-            for name in names:
-                P = self[name]
-                arity = P.arity
+            arity = pred.arity
 
-                vars1 = [Variable("a{}".format(x)) for x in range(0, arity)]
-                vars2 = [Variable("b{}".format(x)) for x in range(0, arity)]
+            vars1 = [Variable("a{}".format(x)) for x in range(0, arity)]
+            vars2 = [Variable("b{}".format(x)) for x in range(0, arity)]
 
-                conjunction = And(*[Equals(v1, v2) for v1, v2 in zip(vars1, vars2)])
+            conjunction = And(*[Equals(v1, v2) for v1, v2 in zip(vars1, vars2)])
 
-                equivalence = ForAll(*(vars1 + vars2), Implies(conjunction, Bidirectional(P(*vars1), P(*vars2))),
-                                    world=World.AXIOM)
-                self.add_formulae(equivalence)
+            equivalence = ForAll(*(vars1 + vars2), Implies(conjunction, Bidirectional(pred(*vars1), pred(*vars2))),
+                                world=World.AXIOM)
+            self.add_formulae(equivalence)
 
     def add_formulae(self, *formulae: _Formula, world: World = World.OPEN):
         r"""Extend the model to include additional formulae
@@ -220,7 +221,6 @@ class Model:
         for name in names:
             self[name] = Predicate(arity=arity, **kwds)
             ret.append(self[name])
-        self._update_theories(*names)
         return ret[0] if len(ret) == 1 else ret
 
     def _add_rules(self, *formulae: _Formula, world: World = World.OPEN):
