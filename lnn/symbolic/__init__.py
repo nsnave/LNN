@@ -8,6 +8,7 @@ from .logic import (
     Not,
     ForAll,
     Exists,
+    Equals,
     Variable,
     NeuralActivationClass,
 )
@@ -22,6 +23,7 @@ __all__ = [
     "Not",
     "ForAll",
     "Exists",
+    "Equals",
     "Variable",
     "NeuralActivationClass",
 ]

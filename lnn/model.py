@@ -17,7 +17,8 @@ from . import _utils, _exceptions
 from .symbolic.axioms import lifted_axioms
 from .constants import Fact, World, Direction
 from .symbolic.logic import (Proposition, Predicate, Variable, _Formula,
-                            ForAll, Exists, Not, And, Or, Implies, Bidirectional)
+                            ForAll, Exists, Not, And, Or, Implies, Bidirectional,
+                            Equals)
 
 
 class Model:
@@ -145,10 +146,6 @@ class Model:
             x = Variable('x')
             y = Variable('y')
             z = Variable('z')
-            
-            # Predicate for the theory of equality
-            self['Equals'] = Predicate(arity=2)
-            Equals = self['Equals']
 
             # Static axioms for equality
             reflexivity = ForAll(x, Equals(x, x), 
@@ -164,7 +161,6 @@ class Model:
 
     def _update_theories(self, *names: str):
         if 'equality' in self.theories:
-            Equals = self['Equals']
             for name in names:
                 P = self[name]
                 arity = P.arity

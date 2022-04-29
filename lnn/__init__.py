@@ -15,6 +15,7 @@ from .symbolic import (
     Not,
     ForAll,
     Exists,
+    Equals,
     Variable,
     NeuralActivationClass,
 )
@@ -58,6 +59,7 @@ __all__ = [
     "Not",
     "ForAll",
     "Exists",
+    "Equals",
     "Variable",
     "truth_table",
     "truth_table_dict",

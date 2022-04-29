@@ -1535,3 +1535,8 @@ class NeuralActivationClass(AutoName):
     r"""Enumeration of tnorms for neural computations"""
     Lukasiewicz = auto()
     LukasiewiczTransparent = auto()
+
+
+_Equals = Predicate(name='Equals', arity=2)
+def Equals(f1: _Formula, f2: _Formula, **kwds) -> _Formula:
+    return And(_Equals(f1, f2), **kwds)
