@@ -5,7 +5,7 @@ from lnn import (Predicate, Variable, And, Not, Or, Bidirectional,
 
 model = Model(theories=['equality'])
 
-dog = model.add_predicates(1, "Dog")
+dog = model.add_predicates(1, "dog")
 
 
 # Our premises:
@@ -16,7 +16,7 @@ model.add_facts({
   dog.name: {
     'Aggie': Fact.TRUE
   },
-  'Equals': {
+  'equals': {
     ('Aggie', 'Fruton'): Fact.TRUE
   }
 })
@@ -30,8 +30,9 @@ model.add_facts({
 # we check to see if the negation of our query
 # invokes a contradiction. Thus, we assume that
 # the negated query is true.
-model["Q"] = Not(Equals('Fruton', 'Aggie'), world=World.AXIOM)
+model["query"] = Not(Equals('Fruton', 'Aggie'), world=World.AXIOM)
 
 model.infer()
 
 model.print()
+print(model['query'].state())

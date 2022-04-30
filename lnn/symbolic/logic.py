@@ -1537,6 +1537,6 @@ class NeuralActivationClass(AutoName):
     LukasiewiczTransparent = auto()
 
 
-_Equals = Predicate(name='Equals', arity=2)
+_Equals = Predicate(name='equals', arity=2)
 def Equals(f1: _Formula, f2: _Formula, **kwds) -> _Formula:
     return And(_Equals(f1, f2), **kwds)
