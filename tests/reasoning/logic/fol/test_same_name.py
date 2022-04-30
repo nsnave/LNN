@@ -33,6 +33,6 @@ model.add_facts({
 model["query"] = Not(Equals('Fruton', 'Aggie'), world=World.AXIOM)
 
 model.infer()
-
+# Inspect the query node
 model.print()
 print(model['query'].state())
