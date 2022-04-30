@@ -96,7 +96,7 @@ class Model:
 
     """
 
-    def __init__(self, name: str = "Model", theories : list = None):
+    def __init__(self, name: str = "Model", theories : list = []):
         self.graph = nx.DiGraph()
         self.nodes = dict()
         self.name = name
