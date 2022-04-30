@@ -18,7 +18,7 @@ from .symbolic.axioms import lifted_axioms
 from .constants import Fact, World, Direction
 from .symbolic.logic import (Proposition, Predicate, Variable, _Formula,
                             ForAll, Exists, Not, And, Or, Implies, Bidirectional,
-                            Equals)
+                            Equals, Function)
 
 
 class Model:
@@ -102,7 +102,7 @@ class Model:
         self.name = name
         self.theories = theories
 
-        self._init_theories(theories)
+        self._init_theories()
 
 
     def __getitem__(self, key: str):
@@ -119,7 +119,9 @@ class Model:
         ```
         """
         if isinstance(formula, Predicate):
-            self._update_theories(formula)
+            self._update_equality(formula)
+        elif isinstance(formula, Function):
+            self._update_functions(formula)
 
         self.add_formulae(formula)
         _utils.dict_rekey(self.nodes, formula.name, name)
@@ -135,7 +137,7 @@ class Model:
     def __contains__(self, key: str):
         return key in self.nodes
 
-    def _init_theories(self, theories: list):
+    def _init_theories(self):
         r"""Extend the model to add support for first-order theories
         by adding any needed "static" axioms, i.e., axioms which do
         not depend on predicates added later.
@@ -145,7 +147,8 @@ class Model:
         add the 2-ary "Equals" predicate to the model.
 
         """
-        if 'equality' in theories:
+        if 'equality' in self.theories or 'functions' in self.theories:
+            
             x = Variable('x')
             y = Variable('y')
             z = Variable('z')
@@ -162,18 +165,48 @@ class Model:
 
             self.add_formulae(reflexivity, symmetry, transitivity)
 
-    def _update_theories(self, pred: Predicate):
-        if 'equality' in self.theories:
+    def _update_equality(self, pred: Predicate):
+        if 'equality' in self.theories or 'functions' in self.theories:
             arity = pred.arity
 
-            vars1 = [Variable("a{}".format(x)) for x in range(0, arity)]
-            vars2 = [Variable("b{}".format(x)) for x in range(0, arity)]
+            vars1 = [Variable("_a{}".format(x)) for x in range(0, arity)]
+            vars2 = [Variable("_b{}".format(x)) for x in range(0, arity)]
 
             conjunction = And(*[Equals(v1, v2) for v1, v2 in zip(vars1, vars2)])
 
-            equivalence = ForAll(*(vars1 + vars2), Implies(conjunction, Bidirectional(pred(*vars1), pred(*vars2))),
-                                world=World.AXIOM)
+            equivalence = ForAll(
+                *(vars1 + vars2), 
+                Implies(
+                    conjunction, 
+                    Bidirectional(
+                        pred(*vars1), 
+                        pred(*vars2)
+                    )
+                ),
+                world=World.AXIOM
+            )
             self.add_formulae(equivalence)
+
+    def _update_functions(self, func: Function):
+        if 'functions' in self.theories:
+            # Declares that the predicate specifying the function is a functional
+            vars = [Variable("_w{}".format(x)) for x in range(0, func.arity)]
+            x = Variable('x')
+            y = Variable('y')
+
+            functional = ForAll(
+                *vars, x, y, 
+                Not(And(
+                    func.predicate(*vars, x), 
+                    And(
+                        func.predicate(*vars, y), 
+                        Not(Equals(x, y))
+                    )
+                )), 
+                world=World.AXIOM
+            )
+            self.add_formulae(functional)
+
 
     def add_formulae(self, *formulae: _Formula, world: World = World.OPEN):
         r"""Extend the model to include additional formulae
@@ -220,6 +253,13 @@ class Model:
         ret = []
         for name in names:
             self[name] = Predicate(arity=arity, **kwds)
+            ret.append(self[name])
+        return ret[0] if len(ret) == 1 else ret
+
+    def add_functions(self, arity: int, *names: str, **kwds):
+        ret = []
+        for name in names:
+            self[name] = Function(arity=arity, **kwds)
             ret.append(self[name])
         return ret[0] if len(ret) == 1 else ret
 

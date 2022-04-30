@@ -919,7 +919,7 @@ class Proposition(_LeafFormula):
         super()._add_facts(fact)
 
 
-class Predicate(_LeafFormula):
+class _Predicate(_LeafFormula):
     r"""Creates a container for a predicate
 
     Stores a table of truths, with columns specified by the arity and rows
@@ -1537,6 +1537,95 @@ class NeuralActivationClass(AutoName):
     LukasiewiczTransparent = auto()
 
 
-_Equals = Predicate(name='equals', arity=2)
-def Equals(f1: _Formula, f2: _Formula, **kwds) -> _Formula:
-    return And(_Equals(f1, f2), **kwds)
+class TermMeta:
+    def __init__(self, vars, preds, new_var=None):
+        self.vars = vars
+        self.preds = preds
+        self.new_var = new_var
+
+var_counter = 0
+
+class _Relation(_Predicate):
+
+    def __init__(self, name: Optional[str] = "", arity: int = 1, **kwds):
+        super().__init__(name, arity, **kwds)
+        self.predicate = super().__call__
+    
+    def _process_terms(self, *args):
+        vars = []    # type, List of new free variables
+        preds = []   # type, List of tuples: (predicate, args to predicate)
+        new_pred_args = []
+        for arg in args:
+            if isinstance(arg, Variable) or isinstance(arg, str):
+                new_pred_args.append(arg)
+            elif isinstance(arg, TermMeta):
+                vars.extend(arg.vars)
+                preds.extend(arg.preds)
+                print("here")
+                print(arg.new_var)
+                new_pred_args.append(arg.new_var)
+        print(new_pred_args)
+        preds.append((self.predicate, new_pred_args))
+        return TermMeta(vars, preds)
+
+class Function(_Relation):
+
+    def __init__(self, name: Optional[str] = "", arity: int = 1, **kwds):
+        super().__init__(name, arity+1, **kwds)
+        self.arity = arity
+
+    def __call__(self, *args):
+        term_data = _Relation._process_terms(self, *args)
+        new_var = self._create_var()
+        term_data.new_var = new_var
+
+        term_data.vars.append(new_var)
+
+        temp = term_data.preds[-1]
+        term_data.preds[-1] = (temp[0], temp[1] + [new_var])
+
+        print(self.name)
+        print(term_data.vars)
+        print(term_data.preds)
+        print()
+        return term_data
+        
+    def _create_var(self):
+        global var_counter
+        ret = Variable(f"_v{hex(var_counter)}")
+        var_counter += 1
+        return ret
+    
+
+class Predicate(_Relation):
+    
+    def __init__(self, name: Optional[str] = "", arity: int = 1, **kwds):
+        super().__init__(name, arity, **kwds)
+
+    def __call__(self, *args, world=None):
+        term_data = _Relation._process_terms(self, *args)
+        vars = term_data.vars
+        preds = term_data.preds
+        print(self.name)
+        print(term_data.vars)
+        print(term_data.preds)
+        print(self.world == World.AXIOM)
+        print()
+        preds = [p[0](*p[1]) for p in preds]
+
+        global var_counter
+        var_counter = 0
+
+        if len(vars) > 0:
+            world = world if world else self.world
+            return Not(ForAll(
+                *vars, 
+                Not(And(*preds)), 
+                world=world
+            ), world=world)
+        else:
+            return preds[0]
+
+
+Equals = Predicate(name='equals', arity=2)
+
