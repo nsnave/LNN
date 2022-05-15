@@ -1597,10 +1597,6 @@ class Function(_Relation):
         return ret
     
 
-
-_Equals = _Predicate(name='equals', arity=2)
-
-
 class Predicate(_Relation):
     
     def __init__(self, name: Optional[str] = "", arity: int = 1, **kwds):
@@ -1648,13 +1644,5 @@ class Predicate(_Relation):
             return preds[0]
 
 
-class _Equals2(Predicate):
-    def __init__(self):
-        self.predicate = _Equals
-        self.name = "equals"
-        self.world = None
+Equals = Predicate(name='equals', arity=2)
 
-    def __call__(self, *args, world=None):
-        return Predicate.__call__(self, *args, world=world)
-
-Equals = _Equals2()
