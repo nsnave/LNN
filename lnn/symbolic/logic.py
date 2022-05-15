@@ -1597,6 +1597,10 @@ class Function(_Relation):
         return ret
     
 
+
+_Equals = _Predicate(name='equals', arity=2)
+
+
 class Predicate(_Relation):
     
     def __init__(self, name: Optional[str] = "", arity: int = 1, **kwds):
@@ -1611,7 +1615,24 @@ class Predicate(_Relation):
         print(term_data.preds)
         print(self.world == World.AXIOM)
         print()
+
+        print("------------------")
+        for p in preds:
+            print(p)
+            print()
+            print(p[0])
+            print()
+            print(p[1])
+            print()
+            print(p[0](*p[1]))
+            print()
+            print("---")
+        print("------------------")
+
         preds = [p[0](*p[1]) for p in preds]
+        print(preds)
+
+        #foo = lambda p : p[0][0](*p[1]) if len(p) == 1 else And(p[0][0](*p[0][1]), foo p[1:])
 
         global var_counter
         var_counter = 0
@@ -1627,5 +1648,13 @@ class Predicate(_Relation):
             return preds[0]
 
 
-Equals = Predicate(name='equals', arity=2)
+class _Equals2(Predicate):
+    def __init__(self):
+        self.predicate = _Equals
+        self.name = "equals"
+        self.world = None
 
+    def __call__(self, *args, world=None):
+        return Predicate.__call__(self, *args, world=world)
+
+Equals = _Equals2()
