@@ -30,7 +30,7 @@ model.add_facts({
 # we check to see if the negation of our query
 # invokes a contradiction. Thus, we assume that
 # the negated query is true.
-model["query"] = Not(Equals('Fruton', 'Aggie'), world=World.AXIOM)
+model["query"] = Not(dog('Fruton'), world=World.AXIOM)
 
 model.infer()
 
