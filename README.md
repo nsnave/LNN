@@ -2,6 +2,17 @@
 [![License](https://img.shields.io/github/license/IBM/LNN)](https://github.com/IBM/LNN/blob/master/LICENSE)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
+## Extendingn LNNs with First-Order Theories
+
+In this fork of IBM's LNN repo, we added support for the equality operator.
+
+An example is contained in [test_same_name.py](/tests/reasoning/logic/fol/test_same_name.py).
+
+Use `pip3 install .` to install the project.
+
+------------
+The remaing README is the original forked one:
+
 # Logical Neural Networks
 LNNs are a novel `Neuro = symbolic` framework designed to seamlessly provide key
 properties of both neural nets (learning) and symbolic logic (knowledge and reasoning).
