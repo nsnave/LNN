@@ -2,7 +2,7 @@
 [![License](https://img.shields.io/github/license/IBM/LNN)](https://github.com/IBM/LNN/blob/master/LICENSE)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-## Extendingn LNNs with First-Order Theories
+## Extending LNNs with First-Order Theories
 
 In this fork of IBM's LNN repo, we added support for the equality operator.
 
